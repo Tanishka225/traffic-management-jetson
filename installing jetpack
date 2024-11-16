@@ -1,0 +1,7 @@
+// LINUX COMMANDS TO ACCESS JETSON NANO ON LAPTOP
+ssh nvidia@192.168.55.1
+password - nvidia
+sudo nmcli devide wifi connect LC password lc@tiet1
+sudo docker images    //shows installed libraries on jetson , in our case there was no pre installed library
+sudo docker pull nvcr.io/nvidia/**add the jetpack version to install**
+
