@@ -4,4 +4,37 @@ password - nvidia
 sudo nmcli devide wifi connect LC password lc@tiet1
 sudo docker images    //shows installed libraries on jetson , in our case there was no pre installed library
 sudo docker pull nvcr.io/nvidia/**add the jetpack version to install**
+sudo apt update
+sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav
+sudo apt install gstreamer1.0-rtsp
+//for usb camera 
+gst-launch-1.0 v4l2src ! video/x-raw, width=640, height=480, framerate=30/1 ! videoconvert ! x264enc tune=zerolatency ! rtspclientsink location=rtsp://localhost:8554/test
+gst-launch-1.0 nvarguscamerasrc ! 'video/x-raw(memory:NVMM),width=640,height=480,framerate=30/1' ! nvvidconv ! x264enc tune=zerolatency ! rtspclientsink location=rtsp://localhost:8554/test
+sudo apt install libgstrtspserver-1.0-dev
+import gi
+gi.require_version('Gst', '1.0')
+from gi.repository import Gst, GstRtspServer
 
+# Initialize GStreamer
+Gst.init(None)
+
+# Create the RTSP server
+server = GstRtspServer.RTSPServer()
+server.set_service("8554")  # Listen on port 8554
+
+# Create the media factory and configure the pipeline
+factory = GstRtspServer.RTSPMediaFactory()
+factory.set_launch("v4l2src ! video/x-raw, width=640, height=480, framerate=30/1 ! videoconvert ! x264enc tune=zerolatency ! rtph264pay name=pay0 pt=96")
+
+# Attach the factory to the server
+server.get_mount_points().add_factory("/test", factory)
+
+# Start the server
+server.attach(None)
+
+# Run the loop
+loop = GLib.MainLoop()
+loop.run()
+
+python3 rtsp_server.py
+ffmpeg -i rtsp://<jetson_ip>:8554/test -c copy output.mp4
